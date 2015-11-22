@@ -59,10 +59,7 @@ func sync () {
 
 	var offset int64
 	for count < vr.TotalResults {
-		if offset > 0 {
-			fmt.Printf("Sleeping 12secs (5calls/min)...\n")
-			time.Sleep(12 * time.Second)
-		}
+		time.Sleep(1500 * time.Millisecond)
 
 		vr, err = gb.GetVideos(offset, 100, giantbomb.Id, giantbomb.DirectionDesc)
 
@@ -306,8 +303,6 @@ func splitNumbers (str_list string) []int64 {
 func main () {
 	flag.Parse()
 	envconfig.Process("gbvideo", &c)
-
-	log.Printf("%#v", c)
 
 	var err error
 	sl, err := storers.NewSQLite(c.DatabaseLocation)
