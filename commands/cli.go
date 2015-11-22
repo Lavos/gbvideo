@@ -91,7 +91,10 @@ func sync () {
 }
 
 func top (num int64) {
+	ct.ChangeColor(ct.Magenta, true, ct.Black, false)
 	fmt.Printf("Top %d videos by publish date:\n", num)
+	ct.ResetColor()
+
 	videos, err := s.GetVideos(num, storers.Field_PublishDate, false)
 
 	if err != nil {
@@ -99,30 +102,27 @@ func top (num int64) {
 	}
 
 	for _, v := range videos {
-		ct.ChangeColor(ct.Yellow, true, ct.Black, false)
-		fmt.Printf("%d: ", v.ID)
-		ct.ChangeColor(ct.White, true, ct.Black, false)
-		fmt.Printf("%s", v.Name)
-
-		ct.ChangeColor(ct.Cyan, true, ct.Black, false)
-		fmt.Printf(" [%s] ", v.VideoType)
-
-		if v.DownloadDate != nil {
-			ct.ChangeColor(ct.Green, true, ct.Black, false)
-			fmt.Printf("D")
-		}
-
-		if v.Queued {
-			ct.ChangeColor(ct.Blue, true, ct.Black, false)
-			fmt.Printf("Q")
-		}
-
-		ct.ChangeColor(ct.White, false, ct.Black, false)
-		fmt.Printf("\n\t%s\n", v.Deck)
+		printVideo(v)
 	}
 }
 
-func queue (nums ...int64) {
+func queue () {
+	videos, err := q.GetQueuedVideos()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ct.ChangeColor(ct.Magenta, true, ct.Black, false)
+	fmt.Printf("Current queued videos: %d\n", len(videos))
+	ct.ResetColor()
+
+	for _, v := range videos {
+		printVideo(v)
+	}
+}
+
+func enqueue (nums ...int64) {
 	var vd *gbvideo.VideoDownload
 	var err error
 
@@ -133,17 +133,17 @@ func queue (nums ...int64) {
 			log.Fatal(err)
 		}
 
-		err = q.Queue(vd)
+		err = q.Enqueue(vd)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Queued %d successfully.\n", n)
+		fmt.Printf("Enqueued %d successfully.\n", n)
 	}
 }
 
-func unqueue (nums ...int64) {
+func dequeue (nums ...int64) {
 	var vd *gbvideo.VideoDownload
 	var err error
 
@@ -154,13 +154,13 @@ func unqueue (nums ...int64) {
 			log.Fatal(err)
 		}
 
-		err = q.UnQueue(vd)
+		err = q.Dequeue(vd)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("UnQueued %d successfully.\n", n)
+		fmt.Printf("Dequeued %d successfully.\n", n)
 	}
 }
 
@@ -261,6 +261,29 @@ func printBytes (bytesRead chan int, total int64, done chan bool) {
 	done <- true
 }
 
+func printVideo (v *gbvideo.VideoDownload) {
+	ct.ChangeColor(ct.Yellow, true, ct.Black, false)
+	fmt.Printf("%d: ", v.ID)
+	ct.ChangeColor(ct.White, true, ct.Black, false)
+	fmt.Printf("%s", v.Name)
+
+	ct.ChangeColor(ct.Cyan, true, ct.Black, false)
+	fmt.Printf(" [%s] ", v.VideoType)
+
+	if v.DownloadDate != nil {
+		ct.ChangeColor(ct.Green, true, ct.Black, false)
+		fmt.Printf("D")
+	}
+
+	if v.Queued {
+		ct.ChangeColor(ct.Blue, true, ct.Black, false)
+		fmt.Printf("Q")
+	}
+
+	ct.ChangeColor(ct.White, false, ct.Black, false)
+	fmt.Printf("\n\t%s\n", v.Deck)
+}
+
 func splitNumbers (str_list string) []int64 {
 	str_slice := strings.Split(str_list, ",")
 	num_list := make([]int64, len(str_slice))
@@ -284,8 +307,10 @@ func main () {
 	flag.Parse()
 	envconfig.Process("gbvideo", &c)
 
+	log.Printf("%#v", c)
+
 	var err error
-	sl, err := storers.NewSQLite(c.DownloadLocation)
+	sl, err := storers.NewSQLite(c.DatabaseLocation)
 	s = sl
 	q = sl
 
@@ -316,12 +341,15 @@ func main () {
 		top(i)
 
 	case "queue":
-		nums := splitNumbers(flag.Arg(1))
-		queue(nums...)
+		queue()
 
-	case "unqueue":
+	case "enqueue":
 		nums := splitNumbers(flag.Arg(1))
-		unqueue(nums...)
+		enqueue(nums...)
+
+	case "dequeue":
+		nums := splitNumbers(flag.Arg(1))
+		dequeue(nums...)
 
 	case "download":
 		download()

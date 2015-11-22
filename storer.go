@@ -12,8 +12,8 @@ type Storer interface {
 }
 
 type Queuer interface {
-	Queue (*VideoDownload) error
-	UnQueue (*VideoDownload) error
+	Enqueue (*VideoDownload) error
+	Dequeue (*VideoDownload) error
 	MarkDownloaded (*VideoDownload) error
 	GetQueuedVideos() ([]*VideoDownload, error)
 }

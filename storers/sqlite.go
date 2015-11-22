@@ -171,13 +171,13 @@ func (s *SQLite) GetVideos(limit int64, sort_field int, direction_asce bool) ([]
 	return s.getVideosFromRows(rows)
 }
 
-func (s *SQLite) Queue(video *gbvideo.VideoDownload) error {
+func (s *SQLite) Enqueue(video *gbvideo.VideoDownload) error {
 	_, err := s.db.Exec(`INSERT OR IGNORE INTO queue (video_id) VALUES (?)`, video.ID)
 
 	return err
 }
 
-func (s *SQLite) UnQueue(video *gbvideo.VideoDownload) error {
+func (s *SQLite) Dequeue(video *gbvideo.VideoDownload) error {
 	_, err := s.db.Exec(`DELETE FROM queue WHERE video_id = ?`, video.ID)
 
 	return err
