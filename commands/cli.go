@@ -40,10 +40,18 @@ func sync () {
 		log.Fatal(err)
 	}
 
-	vr, err := gb.GetVideos(0, 1, giantbomb.Id, giantbomb.DirectionDesc)
+	vr, err := gb.GetVideos(0, 100, giantbomb.Id, giantbomb.DirectionDesc)
 
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	for _, v := range vr.Results {
+		err = s.InsertVideo(v)
+
+		if err != nil {
+			log.Printf("INSERT ERROR: %#v", err)
+		}
 	}
 
 	fmt.Printf("Starting Sync operation...\n")
