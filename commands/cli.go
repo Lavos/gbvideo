@@ -7,8 +7,7 @@ import (
 	"strings"
 	"strconv"
 	"time"
-	"os"
-	"io"
+	"os/exec"
 	"net/http"
 	"github.com/Lavos/gbvideo"
 	"github.com/Lavos/gbvideo/giantbomb"
@@ -181,17 +180,9 @@ func download() {
 	var pr *gbvideo.ProgressReader
 	var req *http.Request
 	var resp *http.Response
-	var file *os.File
 	done := make(chan bool)
 
 	for _, video := range videos {
-		// open file
-		file, err = os.Create(fmt.Sprintf("%s/%s", c.DownloadLocation, video.FileName))
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		// open http request
 		req, err = http.NewRequest("GET", video.HighURL, nil)
 
@@ -215,20 +206,37 @@ func download() {
 
 		go printBytes(pr.BytesRead, resp.ContentLength, done)
 		defer resp.Body.Close()
-		defer file.Close()
+
+		args := []string{
+			"-y",
+			"-i", "pipe:",
+			"-c:v", "copy",
+			"-c:a", "copy",
+			"-f", "hls",
+			"-threads", "0",
+			"-hls_flags", "single_file",
+			"-hls_list_size", "0",
+			"-bsf:v", "h264_mp4toannexb",
+			fmt.Sprintf("%s/%s.m3u8", c.DownloadLocation, video.FileName),
+		}
+
+		cmd := exec.Command("ffmpeg", args...)
+		cmd.Stdin = pr
 
 		ct.ChangeColor(ct.Green, false, ct.Black, false)
 		fmt.Printf("Downloading: ")
 		ct.ResetColor()
 		fmt.Printf("%s\n", video.FileName)
 
-		_, err = io.Copy(file, pr)
+		err = cmd.Start()
 
 		if err != nil {
-			log.Fatalf("COPY ERROR: %s", err)
+			log.Printf("Could not exec ffmpeg: %s", err)
+			continue
 		}
 
 		<-done
+		cmd.Wait()
 
 		err = q.MarkDownloaded(video)
 
