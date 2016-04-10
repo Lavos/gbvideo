@@ -9,6 +9,7 @@ import (
 	"time"
 	"os/exec"
 	"net/http"
+	"net/url"
 	"github.com/Lavos/gbvideo"
 	"github.com/Lavos/gbvideo/giantbomb"
 	"github.com/Lavos/gbvideo/storers"
@@ -178,16 +179,32 @@ func download() {
 	}
 
 	var pr *gbvideo.ProgressReader
+	var video_url *url.URL
+	var values url.Values
 	var req *http.Request
 	var resp *http.Response
 	done := make(chan bool)
 
 	for _, video := range videos {
-		// open http request
-		req, err = http.NewRequest("GET", video.HighURL, nil)
+		// create URL
+		video_url, err = url.Parse(video.HighURL)
 
 		if err != nil {
 			log.Fatal(err)
+			continue
+		}
+
+		values = video_url.Query()
+		values.Set("api_key", c.APIKey)
+
+		video_url.RawQuery = values.Encode()
+
+		// open http request
+		req, err = http.NewRequest("GET", video_url.String(), nil)
+
+		if err != nil {
+			log.Fatal(err)
+			continue
 		}
 
 		resp, err = http.DefaultClient.Do(req)

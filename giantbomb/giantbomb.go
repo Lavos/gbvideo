@@ -60,6 +60,8 @@ func (g *GiantBomb) GetVideos (offset, limit int64, sort_field, direction string
 		return nil, err
 	}
 
+	request.Header.Set("User-Agent", "https://github.com/Lavos/gbvideo - A local database cache and download manager for Giant Bomb videos.")
+
 	response, err := http.DefaultClient.Do(request)
 
 	if err != nil {
