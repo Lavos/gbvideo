@@ -142,7 +142,7 @@ func (s *SQLite) GetVideo(id int64) (*gbvideo.VideoDownload, error) {
 	return videos[0], nil
 }
 
-func (s *SQLite) GetVideos(limit int64, sort_field int, direction_asce bool) ([]*gbvideo.VideoDownload, error) {
+func (s *SQLite) GetVideos(offset, limit int64, sort_field int, direction_asce bool) ([]*gbvideo.VideoDownload, error) {
 	key, ok := field_map[sort_field]
 
 	if !ok {
@@ -157,7 +157,7 @@ func (s *SQLite) GetVideos(limit int64, sort_field int, direction_asce bool) ([]
 		direction = "DESC"
 	}
 
-	query := fmt.Sprintf("SELECT * FROM videos LEFT JOIN queue ON videos.id = queue.video_id ORDER BY %s %s LIMIT %d", key, direction, limit)
+	query := fmt.Sprintf("SELECT * FROM videos LEFT JOIN queue ON videos.id = queue.video_id ORDER BY %s %s LIMIT %d OFFSET %d", key, direction, limit, offset)
 	rows, err := s.db.Query(query)
 
 	switch {

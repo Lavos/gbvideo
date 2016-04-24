@@ -7,7 +7,7 @@ import (
 type Storer interface {
 	GetCount() (int64, error)
 	GetVideo(id int64) (*VideoDownload, error)
-	GetVideos(limit int64, sort_field int, direction_asce bool) ([]*VideoDownload, error)
+	GetVideos(offset, limit int64, sort_field int, direction_asce bool) ([]*VideoDownload, error)
 	InsertVideo(*giantbomb.Video) error
 }
 
