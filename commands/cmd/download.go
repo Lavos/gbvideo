@@ -13,7 +13,7 @@ import (
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Marks a video for download.",
+	Short: "Downloads queued videos.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
 

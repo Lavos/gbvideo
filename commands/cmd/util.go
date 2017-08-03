@@ -45,6 +45,9 @@ func printVideo (v *gbvideo.VideoDownload) {
 	ct.ChangeColor(ct.Cyan, true, ct.Black, false)
 	fmt.Printf(" [%s] ", v.VideoType)
 
+	ct.ChangeColor(ct.Red, false, ct.Black, false)
+	fmt.Printf("(%s) ", v.FileName)
+
 	if v.DownloadDate != nil {
 		ct.ChangeColor(ct.Green, true, ct.Black, false)
 		fmt.Printf("D")
